@@ -20,10 +20,10 @@ class MainFrame(tk.Frame):
 class ImageLabel(tk.Label):
     SIZE = 250
 
-    def __init__(self, master, image, id, **kwargs):
+    def __init__(self, master, image, _id, **kwargs):
         super().__init__(master, **kwargs)
-        self.id = id
-        self._image = image['image']
+        self.id = _id
+        self.origin_image = image['image']
         self.url = image['url']
         re_image = image['image'].resize(self.get_size(image['image'].size), Image.NEAREST)
         tkpi = ImageTk.PhotoImage(re_image)
@@ -33,7 +33,7 @@ class ImageLabel(tk.Label):
         self.bind('<1>', self.click_callback)
 
     def click_callback(self, event):
-        self._image.save(FILENAME)
+        self.origin_image.save(FILENAME)
         global url
         url = self.url
 
@@ -56,8 +56,8 @@ class ImageFrame(tk.Frame):
     COL = 3
     ROW = 3
 
-    def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+    def __init__(self, master, bg='navy', **kwargs):
+        super().__init__(master, bg=bg, **kwargs)
         self.master = master
 
         self.ils = []
@@ -73,8 +73,8 @@ class ImageFrame(tk.Frame):
 
 
 class GetButton(tk.Button):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, text='飯テロ画像収集', **kwargs)
+    def __init__(self, master, text='飯テロ画像収集', **kwargs):
+        super().__init__(master, text=text, **kwargs)
         self.master = master
 
 
@@ -106,14 +106,14 @@ class EntryWithPlaceholder(tk.Entry):
 
 
 class HashtagEntry(EntryWithPlaceholder):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, placeholder='#ハッシュタグ', **kwargs)
+    def __init__(self, master, placeholder='#ハッシュタグ', **kwargs):
+        super().__init__(master, placeholder=placeholder, **kwargs)
         self.master = master
 
 
 class SendButton(tk.Button):
-    def __init__(self, master, **kwargs):
-        super().__init__(master, text='飯テロ', **kwargs)
+    def __init__(self, master, text='飯テロ', **kwargs):
+        super().__init__(master, text=text, **kwargs)
         self.master = master
 
 
@@ -142,6 +142,10 @@ def quit_callback(root):
     root.destroy()
 
 
+def message(hashtag, _url):
+    return '{}\n{} MT\n出典:{}\n'.format(hashtag, random.randint(0, 500), _url)
+
+
 def main():
     auth = tw.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(ACCESS_TOKEN, ACCESS_SECRET)
@@ -161,7 +165,7 @@ def main():
         {'url': 'https://commons.nicovideo.jp/material/nc142493', 'image': Image.open('images/nc142493.jpg')}
     ]
 
-    ifr = ImageFrame(mfr, bg='navy')
+    ifr = ImageFrame(mfr)
     ifr.update(images)
     hen = HashtagEntry(mfr)
     sbt = SendButton(mfr)
@@ -174,7 +178,7 @@ def main():
 
     gbt['command'] = lambda: ifr.update(get_tweets(api, ifr.ROW * ifr.COL))
     global url
-    sbt['command'] = lambda: api.update_with_media(filename=FILENAME, status='{}\n{} MT\n出典:{}\n'.format(hen.get(), random.randint(0, 500), url))
+    sbt['command'] = lambda: api.update_with_media(filename=FILENAME, status=message(hen.get(), url))
 
     root.mainloop()
 
